@@ -62,12 +62,12 @@ def create_message(conv_id: int, author:str, content:str):
 
 
 def check_password(user_id: str, password:str) -> bool:
-    ph = PasswordHasher
+    ph = PasswordHasher()
 
     with get_connection() as conn:
         result = conn.execute(
             """
-            SELECT password FROM users WHERE id = ?
+            SELECT password_hash FROM users WHERE id = ?
             """,
             (user_id,)
         ).fetchone()
@@ -93,7 +93,7 @@ def check_email_exists(email:str):
     return result is not None
 
 
-def get_user_by_email(email:str, password:str):
+def get_user_by_email(email:str):
     with get_connection() as conn:
         return conn.execute(
             """
@@ -103,10 +103,12 @@ def get_user_by_email(email:str, password:str):
         ).fetchone()
 
 
-def login(email:str, password:str) -> bool:
-    result = get_user_by_email(email, password)
+def login(email:str, password:str):
+    result = get_user_by_email(email)
 
     if result is None:
-        return False
+        return None
 
-    return check_password(result[0], password)
+    if check_password(result[0], password):
+        return (result[0])
+    return None
